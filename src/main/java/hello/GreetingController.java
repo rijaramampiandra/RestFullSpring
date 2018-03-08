@@ -12,11 +12,16 @@ import org.apache.http.nio.entity.NStringEntity;
 import org.elasticsearch.client.HttpAsyncResponseConsumerFactory;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import model.Person;
 
 @RestController
 public class GreetingController {
@@ -38,6 +43,9 @@ public class GreetingController {
 
 	@Value("${elasticsearch.port}")
 	private Integer esPort;
+	
+	@Autowired
+	private ObjectMapper objectMapper;
 
 	@CrossOrigin(origins = "http://localhost:4200")
 	@RequestMapping("/greeting")
@@ -49,9 +57,14 @@ public class GreetingController {
 		searchData(restClient);
 
 		Map<String, String> params = Collections.emptyMap();
-		String jsonString = "{" + "\"title\":\"Spring + Spring Data + ElasticSearch\","
-				+ "\"category\":\"Spring Boot\"," + "\"published_date\":\"JAVA-08-MAR-2017\","
-				+ "\"author\":\"Rija RAMAMPIANDRA\"" + "}";
+		
+		final Person person = new Person();
+		person.setAuthor("Spring Boot");
+		person.setTitle("Spring + Spring Data + ElasticSearch");
+		person.setCategory("Rija RAMAMPIANDRA");
+		person.setPublished_date("JAVA-08-MAR-2017");
+		String jsonString = objectMapper.writeValueAsString(person);
+		
 		HttpEntity entity = new NStringEntity(jsonString, ContentType.APPLICATION_JSON);
 		Response response = restClient.performRequest("PUT", esIndex + "/" + esId , params, entity);
 		if (response.getEntity() != null) {
